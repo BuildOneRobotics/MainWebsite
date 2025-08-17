@@ -1,9 +1,16 @@
 {
-  "buildCommand": null,
+  "buildCommand": "npm run build",
   "outputDirectory": ".",
-  "installCommand": null,
+  "installCommand": "npm install",
   "framework": null,
   "analytics": {
     "enable": true
-  }
+  },
+  "functions": {},
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
