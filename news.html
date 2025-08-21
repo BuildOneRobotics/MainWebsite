@@ -18,7 +18,7 @@
                 <li><a href="index.html#about">About</a></li>
                 <li><a href="index.html#services">Services</a></li>
                 <li><a href="news.html" class="active">News</a></li>
-
+                <li><a href="#" id="admin-login-btn">Admin</a></li>
             </ul>
         </nav>
     </header>
@@ -33,15 +33,6 @@
 
         <section class="news-content">
             <div class="container">
-                <div id="admin-login" class="admin-login">
-                    <h3>Admin Login</h3>
-                    <form id="login-form">
-                        <input type="text" id="username" placeholder="Username" required>
-                        <input type="password" id="password" placeholder="Password" required>
-                        <button type="submit">Login</button>
-                    </form>
-                </div>
-
                 <div id="admin-panel" class="admin-panel hidden">
                     <div class="admin-header">
                         <h3>Admin Panel</h3>
@@ -94,6 +85,21 @@
             <p>&copy; 2024 Build One. All rights reserved.</p>
         </div>
     </footer>
+
+    <!-- Admin Modal -->
+    <div id="admin-modal" class="admin-modal hidden">
+        <div class="admin-modal-content">
+            <div class="admin-modal-header">
+                <h3>Admin Login</h3>
+                <button id="close-modal" class="close-modal">&times;</button>
+            </div>
+            <form id="login-form">
+                <input type="text" id="username" placeholder="Username" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+    </div>
 
     <script src="news.js"></script>
 </body>

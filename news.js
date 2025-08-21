@@ -3,7 +3,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let articles = [];
 
     // DOM elements
-    const adminLogin = document.getElementById('admin-login');
+    const adminModal = document.getElementById('admin-modal');
+    const adminLoginBtn = document.getElementById('admin-login-btn');
+    const closeModal = document.getElementById('close-modal');
     const adminPanel = document.getElementById('admin-panel');
     const loginForm = document.getElementById('login-form');
     const addNewsBtn = document.getElementById('add-news-btn');
@@ -13,93 +15,144 @@ document.addEventListener('DOMContentLoaded', function() {
     const logoutBtn = document.getElementById('logout-btn');
     const newsArticles = document.getElementById('news-articles');
 
-    // Admin login
-    loginForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
+    // Show admin modal
+    if (adminLoginBtn) {
+        adminLoginBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            adminModal.classList.remove('hidden');
+        });
+    }
 
-        if (username === 'bensteels' && password === 'bensteels123') {
-            isAdmin = true;
-            adminLogin.classList.add('hidden');
-            adminPanel.classList.remove('hidden');
-            loadArticles();
-        } else {
-            alert('Invalid credentials');
+    // Close modal
+    if (closeModal) {
+        closeModal.addEventListener('click', function() {
+            adminModal.classList.add('hidden');
+        });
+    }
+
+    // Close modal on outside click
+    adminModal.addEventListener('click', function(e) {
+        if (e.target === adminModal) {
+            adminModal.classList.add('hidden');
         }
     });
 
+    // Admin login
+    if (loginForm) {
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (username === 'bensteels' && password === 'bensteels123') {
+                isAdmin = true;
+                adminModal.classList.add('hidden');
+                if (adminPanel) adminPanel.classList.remove('hidden');
+                loadArticles();
+                // Update admin button text
+                if (adminLoginBtn) adminLoginBtn.textContent = 'Logout';
+            } else {
+                alert('Invalid credentials');
+            }
+        });
+    }
+
     // Logout
-    logoutBtn.addEventListener('click', function() {
-        isAdmin = false;
-        adminLogin.classList.remove('hidden');
-        adminPanel.classList.add('hidden');
-        newsForm.classList.add('hidden');
-        document.getElementById('username').value = '';
-        document.getElementById('password').value = '';
-    });
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function() {
+            isAdmin = false;
+            adminPanel.classList.add('hidden');
+            if (newsForm) newsForm.classList.add('hidden');
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            if (adminLoginBtn) adminLoginBtn.textContent = 'Admin';
+        });
+    }
+
+    // Handle admin button click when logged in
+    if (adminLoginBtn) {
+        adminLoginBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (isAdmin) {
+                // Logout
+                isAdmin = false;
+                if (adminPanel) adminPanel.classList.add('hidden');
+                if (newsForm) newsForm.classList.add('hidden');
+                adminLoginBtn.textContent = 'Admin';
+            } else {
+                // Show login modal
+                adminModal.classList.remove('hidden');
+            }
+        });
+    }
 
     // Show/hide news form
-    addNewsBtn.addEventListener('click', function() {
-        if (!isAdmin) return;
-        newsForm.classList.remove('hidden');
-        addNewsBtn.style.display = 'none';
-    });
+    if (addNewsBtn) {
+        addNewsBtn.addEventListener('click', function() {
+            if (!isAdmin) return;
+            newsForm.classList.remove('hidden');
+            addNewsBtn.style.display = 'none';
+        });
+    }
 
-    cancelBtn.addEventListener('click', function() {
-        newsForm.classList.add('hidden');
-        addNewsBtn.style.display = 'inline-block';
-        articleForm.reset();
-    });
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+            newsForm.classList.add('hidden');
+            if (addNewsBtn) addNewsBtn.style.display = 'inline-block';
+            if (articleForm) articleForm.reset();
+        });
+    }
 
     // Handle form submission
-    articleForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        if (!isAdmin) return;
+    if (articleForm) {
+        articleForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!isAdmin) return;
 
-        const title = document.getElementById('article-title').value;
-        const date = document.getElementById('article-date').value;
-        const preview = document.getElementById('article-preview').value;
-        const url = document.getElementById('article-url').value;
-        const fontFamily = document.getElementById('font-family').value;
-        const fontSize = document.getElementById('font-size').value;
+            const title = document.getElementById('article-title').value;
+            const date = document.getElementById('article-date').value;
+            const preview = document.getElementById('article-preview').value;
+            const url = document.getElementById('article-url').value;
+            const fontFamily = document.getElementById('font-family').value;
+            const fontSize = document.getElementById('font-size').value;
 
-        // Format date
-        const formattedDate = new Date(date).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
+            // Format date
+            const formattedDate = new Date(date).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            // Create article object
+            const article = {
+                id: Date.now(),
+                title,
+                date: formattedDate,
+                preview,
+                url,
+                fontFamily,
+                fontSize
+            };
+
+            // Add to articles array
+            articles.unshift(article);
+            
+            // Save to localStorage
+            localStorage.setItem('buildone_articles', JSON.stringify(articles));
+
+            // Render articles
+            renderArticles();
+
+            // Reset form and hide it
+            articleForm.reset();
+            newsForm.classList.add('hidden');
+            if (addNewsBtn) addNewsBtn.style.display = 'inline-block';
+
+            alert('Article published successfully!');
         });
-
-        // Create article object
-        const article = {
-            id: Date.now(),
-            title,
-            date: formattedDate,
-            preview,
-            url,
-            fontFamily,
-            fontSize
-        };
-
-        // Add to articles array
-        articles.unshift(article);
-        
-        // Save to localStorage
-        localStorage.setItem('buildone_articles', JSON.stringify(articles));
-
-        // Render articles
-        renderArticles();
-
-        // Reset form and hide it
-        articleForm.reset();
-        newsForm.classList.add('hidden');
-        addNewsBtn.style.display = 'inline-block';
-
-        alert('Article published successfully!');
-    });
+    }
 
     // Load articles from localStorage
     function loadArticles() {
@@ -112,6 +165,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Render articles
     function renderArticles() {
+        if (!newsArticles) return;
+        
         newsArticles.innerHTML = '';
         
         if (articles.length === 0) {
@@ -125,12 +180,19 @@ document.addEventListener('DOMContentLoaded', function() {
             articleElement.style.fontFamily = article.fontFamily;
             articleElement.style.fontSize = article.fontSize;
             
+            // Make article clickable if it has a URL
+            if (article.url) {
+                articleElement.style.cursor = 'pointer';
+                articleElement.addEventListener('click', function() {
+                    window.open(article.url, '_blank');
+                });
+            }
+            
             articleElement.innerHTML = `
                 <div class="article-date">${article.date}</div>
                 <h2>${article.title}</h2>
                 <p>${article.preview}</p>
                 <div class="article-actions">
-                    ${article.url ? `<a href="${article.url}" target="_blank" class="read-more-btn">Read Full Article</a>` : ''}
                     ${isAdmin ? `<button class="delete-btn" onclick="deleteArticle(${article.id})">Delete</button>` : ''}
                 </div>
             `;
@@ -151,14 +213,15 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Set today's date as default
-    document.getElementById('article-date').valueAsDate = new Date();
+    const articleDateInput = document.getElementById('article-date');
+    if (articleDateInput) {
+        articleDateInput.valueAsDate = new Date();
+    }
 
-    // Load articles on page load (for non-admin view)
-    if (!isAdmin) {
-        const saved = localStorage.getItem('buildone_articles');
-        if (saved) {
-            articles = JSON.parse(saved);
-            renderArticles();
-        }
+    // Load articles on page load
+    const saved = localStorage.getItem('buildone_articles');
+    if (saved) {
+        articles = JSON.parse(saved);
+        renderArticles();
     }
 });
