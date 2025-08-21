@@ -22,18 +22,30 @@ document.addEventListener('DOMContentLoaded', function() {
     let logoutBtn = null;
 
     // Show admin modal when clicking Admin button
-    if (adminLoginBtn) {
-        adminLoginBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            if (isAdmin) {
-                // If already logged in, logout
-                logout();
-            } else {
-                // Show login modal
+    function handleAdminButtonClick(e) {
+        e.preventDefault();
+        if (isAdmin) {
+            // If already logged in, logout
+            logout();
+        } else {
+            // Show login modal
+            if (adminModal) {
                 adminModal.classList.remove('hidden');
             }
-        });
+        }
     }
+    
+    // Attach event listener to admin button
+    if (adminLoginBtn) {
+        adminLoginBtn.addEventListener('click', handleAdminButtonClick);
+    }
+    
+    // Also handle admin button on homepage if it exists
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.id === 'admin-login-btn') {
+            handleAdminButtonClick(e);
+        }
+    });
 
     // Close modal
     if (closeModal) {
@@ -66,7 +78,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 isAdmin = true;
                 adminModal.classList.add('hidden');
                 createAdminInterface();
-                if (adminLoginBtn) adminLoginBtn.textContent = 'Logout';
+                // Update all admin buttons
+                document.querySelectorAll('#admin-login-btn').forEach(btn => {
+                    btn.textContent = 'Logout';
+                });
                 clearLoginForm();
                 renderArticles(); // Re-render to show admin controls
             } else {
@@ -79,7 +94,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function logout() {
         isAdmin = false;
         removeAdminInterface();
-        if (adminLoginBtn) adminLoginBtn.textContent = 'Admin';
+        // Update all admin buttons
+        document.querySelectorAll('#admin-login-btn').forEach(btn => {
+            btn.textContent = 'Admin';
+        });
         clearLoginForm();
         renderArticles(); // Re-render to hide admin controls
     }
