@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 isAdmin = true;
                 adminModal.classList.add('hidden');
                 if (adminPanel) adminPanel.classList.remove('hidden');
-                loadArticles();
+                renderArticles(); // Re-render to show admin controls
                 // Update admin button text
                 if (adminLoginBtn) adminLoginBtn.textContent = 'Logout';
             } else {
@@ -67,6 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
             if (adminLoginBtn) adminLoginBtn.textContent = 'Admin';
+            renderArticles(); // Re-render to hide admin controls
         });
     }
 
@@ -80,6 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (adminPanel) adminPanel.classList.add('hidden');
                 if (newsForm) newsForm.classList.add('hidden');
                 adminLoginBtn.textContent = 'Admin';
+                renderArticles(); // Re-render to hide admin controls
             } else {
                 // Show login modal
                 adminModal.classList.remove('hidden');
@@ -160,7 +162,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (saved) {
             articles = JSON.parse(saved);
         }
-        renderArticles();
     }
 
     // Render articles
