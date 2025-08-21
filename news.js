@@ -10,14 +10,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const adminModal = document.getElementById('admin-modal');
     const adminLoginBtn = document.getElementById('admin-login-btn');
     const closeModal = document.getElementById('close-modal');
-    const adminPanel = document.getElementById('admin-panel');
     const loginForm = document.getElementById('login-form');
-    const addNewsBtn = document.getElementById('add-news-btn');
-    const newsForm = document.getElementById('news-form');
-    const articleForm = document.getElementById('article-form');
-    const cancelBtn = document.getElementById('cancel-btn');
-    const logoutBtn = document.getElementById('logout-btn');
     const newsArticles = document.getElementById('news-articles');
+    
+    // Admin elements (created dynamically)
+    let adminPanel = null;
+    let newsForm = null;
+    let articleForm = null;
+    let addNewsBtn = null;
+    let cancelBtn = null;
+    let logoutBtn = null;
 
     // Show admin modal when clicking Admin button
     if (adminLoginBtn) {
@@ -63,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Successful login
                 isAdmin = true;
                 adminModal.classList.add('hidden');
-                if (adminPanel) adminPanel.classList.remove('hidden');
+                createAdminInterface();
                 if (adminLoginBtn) adminLoginBtn.textContent = 'Logout';
                 clearLoginForm();
                 renderArticles(); // Re-render to show admin controls
@@ -76,8 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Logout function
     function logout() {
         isAdmin = false;
-        if (adminPanel) adminPanel.classList.add('hidden');
-        if (newsForm) newsForm.classList.add('hidden');
+        removeAdminInterface();
         if (adminLoginBtn) adminLoginBtn.textContent = 'Admin';
         clearLoginForm();
         renderArticles(); // Re-render to hide admin controls
@@ -89,31 +90,85 @@ document.addEventListener('DOMContentLoaded', function() {
         if (document.getElementById('password')) document.getElementById('password').value = '';
     }
 
-    // Logout button
-    if (logoutBtn) {
+    // Create admin interface dynamically
+    function createAdminInterface() {
+        if (adminPanel) return; // Already created
+        
+        const container = document.querySelector('.news-content .container');
+        
+        // Create admin panel
+        adminPanel = document.createElement('div');
+        adminPanel.id = 'admin-panel';
+        adminPanel.className = 'admin-panel';
+        adminPanel.innerHTML = `
+            <div class="admin-header">
+                <h3>Admin Panel</h3>
+                <button id="logout-btn" class="logout-btn">Logout</button>
+            </div>
+            <button id="add-news-btn" class="admin-btn">Add News Article</button>
+        `;
+        
+        // Create news form
+        newsForm = document.createElement('div');
+        newsForm.id = 'news-form';
+        newsForm.className = 'news-form hidden';
+        newsForm.innerHTML = `
+            <h3>Add New Article</h3>
+            <form id="article-form">
+                <input type="text" id="article-title" placeholder="Article Title" required>
+                <input type="date" id="article-date" required>
+                <textarea id="article-preview" placeholder="Article preview (shown on news page)..." rows="3" required></textarea>
+                <input type="url" id="article-url" placeholder="Full article URL (optional)">
+                
+                <div class="formatting-options">
+                    <label>Font Family:</label>
+                    <select id="font-family">
+                        <option value="Inter">Inter</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                    </select>
+                    
+                    <label>Font Size:</label>
+                    <select id="font-size">
+                        <option value="0.9rem">Small</option>
+                        <option value="1rem" selected>Medium</option>
+                        <option value="1.1rem">Large</option>
+                    </select>
+                </div>
+                
+                <div class="form-buttons">
+                    <button type="submit">Publish Article</button>
+                    <button type="button" id="cancel-btn">Cancel</button>
+                </div>
+            </form>
+        `;
+        
+        // Insert before news articles
+        container.insertBefore(adminPanel, newsArticles);
+        container.insertBefore(newsForm, newsArticles);
+        
+        // Get references to new elements
+        addNewsBtn = document.getElementById('add-news-btn');
+        articleForm = document.getElementById('article-form');
+        cancelBtn = document.getElementById('cancel-btn');
+        logoutBtn = document.getElementById('logout-btn');
+        
+        // Add event listeners
         logoutBtn.addEventListener('click', logout);
-    }
-
-    // Show news form
-    if (addNewsBtn) {
+        
         addNewsBtn.addEventListener('click', function() {
             if (!isAdmin) return;
             newsForm.classList.remove('hidden');
             addNewsBtn.style.display = 'none';
         });
-    }
-
-    // Cancel news form
-    if (cancelBtn) {
+        
         cancelBtn.addEventListener('click', function() {
             newsForm.classList.add('hidden');
-            if (addNewsBtn) addNewsBtn.style.display = 'inline-block';
-            if (articleForm) articleForm.reset();
+            addNewsBtn.style.display = 'inline-block';
+            articleForm.reset();
         });
-    }
-
-    // Handle article form submission
-    if (articleForm) {
+        
         articleForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -156,10 +211,32 @@ document.addEventListener('DOMContentLoaded', function() {
             // Reset and hide form
             articleForm.reset();
             newsForm.classList.add('hidden');
-            if (addNewsBtn) addNewsBtn.style.display = 'inline-block';
+            addNewsBtn.style.display = 'inline-block';
 
             alert('Article published successfully!');
         });
+        
+        // Set today's date as default
+        const articleDateInput = document.getElementById('article-date');
+        if (articleDateInput) {
+            articleDateInput.valueAsDate = new Date();
+        }
+    }
+    
+    // Remove admin interface
+    function removeAdminInterface() {
+        if (adminPanel) {
+            adminPanel.remove();
+            adminPanel = null;
+        }
+        if (newsForm) {
+            newsForm.remove();
+            newsForm = null;
+        }
+        addNewsBtn = null;
+        articleForm = null;
+        cancelBtn = null;
+        logoutBtn = null;
     }
 
     // Load articles from localStorage
@@ -219,9 +296,5 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // Set today's date as default
-    const articleDateInput = document.getElementById('article-date');
-    if (articleDateInput) {
-        articleDateInput.valueAsDate = new Date();
-    }
+
 });

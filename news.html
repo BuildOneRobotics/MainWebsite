@@ -33,46 +33,6 @@
 
         <section class="news-content">
             <div class="container">
-                <div id="admin-panel" class="admin-panel hidden">
-                    <div class="admin-header">
-                        <h3>Admin Panel</h3>
-                        <button id="logout-btn" class="logout-btn">Logout</button>
-                    </div>
-                    <button id="add-news-btn" class="admin-btn">Add News Article</button>
-                </div>
-
-                <div id="news-form" class="news-form hidden">
-                    <h3>Add New Article</h3>
-                    <form id="article-form">
-                        <input type="text" id="article-title" placeholder="Article Title" required>
-                        <input type="date" id="article-date" required>
-                        <textarea id="article-preview" placeholder="Article preview (shown on news page)..." rows="3" required></textarea>
-                        <input type="url" id="article-url" placeholder="Full article URL (optional)">
-                        
-                        <div class="formatting-options">
-                            <label>Font Family:</label>
-                            <select id="font-family">
-                                <option value="Inter">Inter</option>
-                                <option value="Arial">Arial</option>
-                                <option value="Georgia">Georgia</option>
-                                <option value="Times New Roman">Times New Roman</option>
-                            </select>
-                            
-                            <label>Font Size:</label>
-                            <select id="font-size">
-                                <option value="0.9rem">Small</option>
-                                <option value="1rem" selected>Medium</option>
-                                <option value="1.1rem">Large</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-buttons">
-                            <button type="submit">Publish Article</button>
-                            <button type="button" id="cancel-btn">Cancel</button>
-                        </div>
-                    </form>
-                </div>
-
                 <div id="news-articles" class="news-articles">
                     <!-- Articles will be dynamically added here -->
                 </div>
