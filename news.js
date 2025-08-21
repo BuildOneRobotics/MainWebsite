@@ -2,6 +2,10 @@ document.addEventListener('DOMContentLoaded', function() {
     let isAdmin = false;
     let articles = [];
 
+    // Load articles from localStorage on page load
+    loadArticles();
+    renderArticles();
+
     // DOM elements
     const adminModal = document.getElementById('admin-modal');
     const adminLoginBtn = document.getElementById('admin-login-btn');
@@ -15,11 +19,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const logoutBtn = document.getElementById('logout-btn');
     const newsArticles = document.getElementById('news-articles');
 
-    // Show admin modal
+    // Show admin modal when clicking Admin button
     if (adminLoginBtn) {
         adminLoginBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            adminModal.classList.remove('hidden');
+            if (isAdmin) {
+                // If already logged in, logout
+                logout();
+            } else {
+                // Show login modal
+                adminModal.classList.remove('hidden');
+            }
         });
     }
 
@@ -27,17 +37,21 @@ document.addEventListener('DOMContentLoaded', function() {
     if (closeModal) {
         closeModal.addEventListener('click', function() {
             adminModal.classList.add('hidden');
+            clearLoginForm();
         });
     }
 
     // Close modal on outside click
-    adminModal.addEventListener('click', function(e) {
-        if (e.target === adminModal) {
-            adminModal.classList.add('hidden');
-        }
-    });
+    if (adminModal) {
+        adminModal.addEventListener('click', function(e) {
+            if (e.target === adminModal) {
+                adminModal.classList.add('hidden');
+                clearLoginForm();
+            }
+        });
+    }
 
-    // Admin login
+    // Handle login form submission
     if (loginForm) {
         loginForm.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -46,50 +60,41 @@ document.addEventListener('DOMContentLoaded', function() {
             const password = document.getElementById('password').value;
 
             if (username === 'bensteels' && password === 'bensteels123') {
+                // Successful login
                 isAdmin = true;
                 adminModal.classList.add('hidden');
                 if (adminPanel) adminPanel.classList.remove('hidden');
-                renderArticles(); // Re-render to show admin controls
-                // Update admin button text
                 if (adminLoginBtn) adminLoginBtn.textContent = 'Logout';
+                clearLoginForm();
+                renderArticles(); // Re-render to show admin controls
             } else {
                 alert('Invalid credentials');
             }
         });
     }
 
-    // Logout
+    // Logout function
+    function logout() {
+        isAdmin = false;
+        if (adminPanel) adminPanel.classList.add('hidden');
+        if (newsForm) newsForm.classList.add('hidden');
+        if (adminLoginBtn) adminLoginBtn.textContent = 'Admin';
+        clearLoginForm();
+        renderArticles(); // Re-render to hide admin controls
+    }
+
+    // Clear login form
+    function clearLoginForm() {
+        if (document.getElementById('username')) document.getElementById('username').value = '';
+        if (document.getElementById('password')) document.getElementById('password').value = '';
+    }
+
+    // Logout button
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', function() {
-            isAdmin = false;
-            adminPanel.classList.add('hidden');
-            if (newsForm) newsForm.classList.add('hidden');
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-            if (adminLoginBtn) adminLoginBtn.textContent = 'Admin';
-            renderArticles(); // Re-render to hide admin controls
-        });
+        logoutBtn.addEventListener('click', logout);
     }
 
-    // Handle admin button click when logged in
-    if (adminLoginBtn) {
-        adminLoginBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            if (isAdmin) {
-                // Logout
-                isAdmin = false;
-                if (adminPanel) adminPanel.classList.add('hidden');
-                if (newsForm) newsForm.classList.add('hidden');
-                adminLoginBtn.textContent = 'Admin';
-                renderArticles(); // Re-render to hide admin controls
-            } else {
-                // Show login modal
-                adminModal.classList.remove('hidden');
-            }
-        });
-    }
-
-    // Show/hide news form
+    // Show news form
     if (addNewsBtn) {
         addNewsBtn.addEventListener('click', function() {
             if (!isAdmin) return;
@@ -98,6 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Cancel news form
     if (cancelBtn) {
         cancelBtn.addEventListener('click', function() {
             newsForm.classList.add('hidden');
@@ -106,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Handle form submission
+    // Handle article form submission
     if (articleForm) {
         articleForm.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -127,7 +133,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 day: 'numeric'
             });
 
-            // Create article object
+            // Create article
             const article = {
                 id: Date.now(),
                 title,
@@ -147,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Render articles
             renderArticles();
 
-            // Reset form and hide it
+            // Reset and hide form
             articleForm.reset();
             newsForm.classList.add('hidden');
             if (addNewsBtn) addNewsBtn.style.display = 'inline-block';
@@ -178,13 +184,15 @@ document.addEventListener('DOMContentLoaded', function() {
         articles.forEach(article => {
             const articleElement = document.createElement('article');
             articleElement.className = 'news-article';
-            articleElement.style.fontFamily = article.fontFamily;
-            articleElement.style.fontSize = article.fontSize;
+            articleElement.style.fontFamily = article.fontFamily || 'Inter';
+            articleElement.style.fontSize = article.fontSize || '1rem';
             
             // Make article clickable if it has a URL
             if (article.url) {
                 articleElement.style.cursor = 'pointer';
-                articleElement.addEventListener('click', function() {
+                articleElement.addEventListener('click', function(e) {
+                    // Don't trigger if clicking on delete button
+                    if (e.target.classList.contains('delete-btn')) return;
                     window.open(article.url, '_blank');
                 });
             }
@@ -193,9 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="article-date">${article.date}</div>
                 <h2>${article.title}</h2>
                 <p>${article.preview}</p>
-                <div class="article-actions">
-                    ${isAdmin ? `<button class="delete-btn" onclick="deleteArticle(${article.id})">Delete</button>` : ''}
-                </div>
+                ${isAdmin ? `<div class="article-actions"><button class="delete-btn" onclick="deleteArticle(${article.id})">Delete</button></div>` : ''}
             `;
 
             newsArticles.appendChild(articleElement);
@@ -217,12 +223,5 @@ document.addEventListener('DOMContentLoaded', function() {
     const articleDateInput = document.getElementById('article-date');
     if (articleDateInput) {
         articleDateInput.valueAsDate = new Date();
-    }
-
-    // Load articles on page load
-    const saved = localStorage.getItem('buildone_articles');
-    if (saved) {
-        articles = JSON.parse(saved);
-        renderArticles();
     }
 });
