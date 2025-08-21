@@ -18,7 +18,7 @@
                 <li><a href="index.html#about">About</a></li>
                 <li><a href="index.html#services">Services</a></li>
                 <li><a href="news.html" class="active">News</a></li>
-                <li><a href="index.html#contact">Contact</a></li>
+
             </ul>
         </nav>
     </header>
@@ -33,7 +33,20 @@
 
         <section class="news-content">
             <div class="container">
-                <div class="news-admin">
+                <div id="admin-login" class="admin-login">
+                    <h3>Admin Login</h3>
+                    <form id="login-form">
+                        <input type="text" id="username" placeholder="Username" required>
+                        <input type="password" id="password" placeholder="Password" required>
+                        <button type="submit">Login</button>
+                    </form>
+                </div>
+
+                <div id="admin-panel" class="admin-panel hidden">
+                    <div class="admin-header">
+                        <h3>Admin Panel</h3>
+                        <button id="logout-btn" class="logout-btn">Logout</button>
+                    </div>
                     <button id="add-news-btn" class="admin-btn">Add News Article</button>
                 </div>
 
@@ -42,7 +55,26 @@
                     <form id="article-form">
                         <input type="text" id="article-title" placeholder="Article Title" required>
                         <input type="date" id="article-date" required>
-                        <textarea id="article-content" placeholder="Article content..." rows="6" required></textarea>
+                        <textarea id="article-preview" placeholder="Article preview (shown on news page)..." rows="3" required></textarea>
+                        <input type="url" id="article-url" placeholder="Full article URL (optional)">
+                        
+                        <div class="formatting-options">
+                            <label>Font Family:</label>
+                            <select id="font-family">
+                                <option value="Inter">Inter</option>
+                                <option value="Arial">Arial</option>
+                                <option value="Georgia">Georgia</option>
+                                <option value="Times New Roman">Times New Roman</option>
+                            </select>
+                            
+                            <label>Font Size:</label>
+                            <select id="font-size">
+                                <option value="0.9rem">Small</option>
+                                <option value="1rem" selected>Medium</option>
+                                <option value="1.1rem">Large</option>
+                            </select>
+                        </div>
+                        
                         <div class="form-buttons">
                             <button type="submit">Publish Article</button>
                             <button type="button" id="cancel-btn">Cancel</button>
@@ -51,23 +83,7 @@
                 </div>
 
                 <div id="news-articles" class="news-articles">
-                    <article class="news-article">
-                        <div class="article-date">December 15, 2024</div>
-                        <h2>Build One Launches Revolutionary AI Assistant Robot</h2>
-                        <p>We're excited to announce the launch of our latest AI assistant robot, designed to revolutionize workplace productivity. This cutting-edge robot combines advanced natural language processing with sophisticated motor skills to assist in various professional environments.</p>
-                    </article>
-
-                    <article class="news-article">
-                        <div class="article-date">December 10, 2024</div>
-                        <h2>Partnership with Leading Tech Companies</h2>
-                        <p>Build One has formed strategic partnerships with several leading technology companies to accelerate the development and deployment of AI robotics solutions across multiple industries.</p>
-                    </article>
-
-                    <article class="news-article">
-                        <div class="article-date">December 5, 2024</div>
-                        <h2>AI Robotics Research Breakthrough</h2>
-                        <p>Our research team has achieved a significant breakthrough in machine learning algorithms that enable robots to learn and adapt to new environments more efficiently than ever before.</p>
-                    </article>
+                    <!-- Articles will be dynamically added here -->
                 </div>
             </div>
         </section>
