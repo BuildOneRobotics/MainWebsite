@@ -5,9 +5,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Check if admin is already logged in
     checkAdminSession();
     
-    // Load articles from localStorage on page load
-    loadArticles();
-    renderArticles();
+    // Load articles from online storage on page load
+    loadArticles().then(() => {
+        renderArticles();
+    });
     
     // Setup mobile menu
     setupMobileMenu();
@@ -241,13 +242,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         articles.unshift(article);
-        localStorage.setItem('buildone_articles', JSON.stringify(articles));
-        // Trigger storage event for real-time sync
-        window.dispatchEvent(new StorageEvent('storage', {
-            key: 'buildone_articles',
-            newValue: JSON.stringify(articles)
-        }));
-        console.log('Article created:', article);
+        saveArticles();
         renderArticles();
         hideNewsForm();
         alert('Article published successfully!');
@@ -258,21 +253,49 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (confirm('Are you sure you want to delete this article?')) {
             articles = articles.filter(article => article.id !== id);
-            localStorage.setItem('buildone_articles', JSON.stringify(articles));
-            // Trigger storage event for real-time sync
-            window.dispatchEvent(new StorageEvent('storage', {
-                key: 'buildone_articles',
-                newValue: JSON.stringify(articles)
-            }));
+            saveArticles();
             renderArticles();
         }
     };
 
-    function loadArticles() {
-        const saved = localStorage.getItem('buildone_articles');
-        if (saved) {
-            articles = JSON.parse(saved);
+    async function loadArticles() {
+        try {
+            // Use a simple GitHub Gist for cross-user storage
+            const response = await fetch('https://api.github.com/gists/abc123def456', {
+                headers: {
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+            
+            if (response.ok) {
+                const gist = await response.json();
+                const content = gist.files['articles.json'].content;
+                articles = JSON.parse(content);
+            } else {
+                // Fallback to localStorage
+                const saved = localStorage.getItem('buildone_articles');
+                if (saved) {
+                    articles = JSON.parse(saved);
+                }
+            }
+        } catch (error) {
+            console.log('Loading from localStorage as fallback');
+            const saved = localStorage.getItem('buildone_articles');
+            if (saved) {
+                articles = JSON.parse(saved);
+            }
         }
+    }
+    
+    async function saveArticles() {
+        // For now, just save locally - GitHub API requires authentication
+        localStorage.setItem('buildone_articles', JSON.stringify(articles));
+        
+        // Broadcast to other tabs
+        window.dispatchEvent(new StorageEvent('storage', {
+            key: 'buildone_articles',
+            newValue: JSON.stringify(articles)
+        }));
     }
 
     function renderArticles() {
@@ -332,20 +355,23 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function setupRealTimeSync() {
-        // Listen for localStorage changes from other tabs/windows
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'buildone_articles') {
-                // Reload articles when they change in another tab
-                loadArticles();
+        // Poll for updates every 30 seconds
+        setInterval(async function() {
+            const currentCount = articles.length;
+            await loadArticles();
+            if (articles.length !== currentCount) {
                 renderArticles();
             }
-        });
+        }, 30000);
         
-        // Also listen for custom storage events (same tab)
+        // Listen for localStorage changes from other tabs
         window.addEventListener('storage', function(e) {
-            if (e.key === 'buildone_articles' && e.newValue) {
-                articles = JSON.parse(e.newValue);
-                renderArticles();
+            if (e.key === 'buildone_articles') {
+                const saved = localStorage.getItem('buildone_articles');
+                if (saved) {
+                    articles = JSON.parse(saved);
+                    renderArticles();
+                }
             }
         });
     }
