@@ -8,6 +8,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load articles from localStorage on page load
     loadArticles();
     renderArticles();
+    
+    // Setup mobile menu
+    setupMobileMenu();
+    
+    // Setup real-time syncing
+    setupRealTimeSync();
 
     // Admin elements (created dynamically)
     let adminPanel = null;
@@ -236,6 +242,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         articles.unshift(article);
         localStorage.setItem('buildone_articles', JSON.stringify(articles));
+        // Trigger storage event for real-time sync
+        window.dispatchEvent(new StorageEvent('storage', {
+            key: 'buildone_articles',
+            newValue: JSON.stringify(articles)
+        }));
         console.log('Article created:', article);
         renderArticles();
         hideNewsForm();
@@ -248,6 +259,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (confirm('Are you sure you want to delete this article?')) {
             articles = articles.filter(article => article.id !== id);
             localStorage.setItem('buildone_articles', JSON.stringify(articles));
+            // Trigger storage event for real-time sync
+            window.dispatchEvent(new StorageEvent('storage', {
+                key: 'buildone_articles',
+                newValue: JSON.stringify(articles)
+            }));
             renderArticles();
         }
     };
@@ -292,6 +308,45 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
 
             newsArticles.appendChild(articleElement);
+        });
+    }
+    
+    function setupMobileMenu() {
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const navLinks = document.getElementById('nav-links');
+        
+        if (mobileMenuBtn && navLinks) {
+            mobileMenuBtn.addEventListener('click', function() {
+                mobileMenuBtn.classList.toggle('active');
+                navLinks.classList.toggle('active');
+            });
+            
+            // Close menu when clicking on links
+            navLinks.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    mobileMenuBtn.classList.remove('active');
+                    navLinks.classList.remove('active');
+                }
+            });
+        }
+    }
+    
+    function setupRealTimeSync() {
+        // Listen for localStorage changes from other tabs/windows
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'buildone_articles') {
+                // Reload articles when they change in another tab
+                loadArticles();
+                renderArticles();
+            }
+        });
+        
+        // Also listen for custom storage events (same tab)
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'buildone_articles' && e.newValue) {
+                articles = JSON.parse(e.newValue);
+                renderArticles();
+            }
         });
     }
 });
