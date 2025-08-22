@@ -2,6 +2,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let isAdmin = false;
     let articles = [];
 
+    // Check if admin is already logged in
+    checkAdminSession();
+    
     // Load articles from localStorage on page load
     loadArticles();
     renderArticles();
@@ -43,6 +46,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (username === 'bensteels' && password === 'bensteels123') {
                 // Successful login
                 isAdmin = true;
+                // Save admin session
+                sessionStorage.setItem('buildone_admin', 'true');
                 hideLoginModal();
                 createAdminInterface();
                 updateAdminButtons('Logout');
@@ -84,9 +89,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function logout() {
         isAdmin = false;
+        // Clear admin session
+        sessionStorage.removeItem('buildone_admin');
         removeAdminInterface();
         updateAdminButtons('Admin');
         renderArticles();
+    }
+    
+    function checkAdminSession() {
+        // Check if admin session exists
+        if (sessionStorage.getItem('buildone_admin') === 'true') {
+            isAdmin = true;
+            updateAdminButtons('Logout');
+            // Only create admin interface if on news page
+            if (document.getElementById('news-articles')) {
+                createAdminInterface();
+            }
+        }
     }
 
     function createAdminInterface() {
