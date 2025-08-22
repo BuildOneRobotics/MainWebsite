@@ -6,68 +6,35 @@ document.addEventListener('DOMContentLoaded', function() {
     loadArticles();
     renderArticles();
 
-    // DOM elements
-    const adminModal = document.getElementById('admin-modal');
-    const adminLoginBtn = document.getElementById('admin-login-btn');
-    const closeModal = document.getElementById('close-modal');
-    const loginForm = document.getElementById('login-form');
-    const newsArticles = document.getElementById('news-articles');
-    
     // Admin elements (created dynamically)
     let adminPanel = null;
     let newsForm = null;
-    let articleForm = null;
-    let addNewsBtn = null;
-    let cancelBtn = null;
-    let logoutBtn = null;
 
-    // Show admin modal when clicking Admin button
-    function handleAdminButtonClick(e) {
-        e.preventDefault();
-        if (isAdmin) {
-            // If already logged in, logout
-            logout();
-        } else {
-            // Show login modal
-            if (adminModal) {
-                adminModal.classList.remove('hidden');
-            }
-        }
-    }
-    
-    // Attach event listener to admin button
-    if (adminLoginBtn) {
-        adminLoginBtn.addEventListener('click', handleAdminButtonClick);
-    }
-    
-    // Also handle admin button on homepage if it exists
+    // Handle admin button clicks (works on all pages)
     document.addEventListener('click', function(e) {
         if (e.target && e.target.id === 'admin-login-btn') {
-            handleAdminButtonClick(e);
+            e.preventDefault();
+            if (isAdmin) {
+                logout();
+            } else {
+                showLoginModal();
+            }
+        }
+        
+        // Handle modal close
+        if (e.target && e.target.id === 'close-modal') {
+            hideLoginModal();
+        }
+        
+        // Handle modal backdrop click
+        if (e.target && e.target.id === 'admin-modal') {
+            hideLoginModal();
         }
     });
 
-    // Close modal
-    if (closeModal) {
-        closeModal.addEventListener('click', function() {
-            adminModal.classList.add('hidden');
-            clearLoginForm();
-        });
-    }
-
-    // Close modal on outside click
-    if (adminModal) {
-        adminModal.addEventListener('click', function(e) {
-            if (e.target === adminModal) {
-                adminModal.classList.add('hidden');
-                clearLoginForm();
-            }
-        });
-    }
-
     // Handle login form submission
-    if (loginForm) {
-        loginForm.addEventListener('submit', function(e) {
+    document.addEventListener('submit', function(e) {
+        if (e.target && e.target.id === 'login-form') {
             e.preventDefault();
             
             const username = document.getElementById('username').value;
@@ -76,66 +43,78 @@ document.addEventListener('DOMContentLoaded', function() {
             if (username === 'bensteels' && password === 'bensteels123') {
                 // Successful login
                 isAdmin = true;
-                adminModal.classList.add('hidden');
+                hideLoginModal();
                 createAdminInterface();
-                // Update all admin buttons
-                document.querySelectorAll('#admin-login-btn').forEach(btn => {
-                    btn.textContent = 'Logout';
-                });
-                clearLoginForm();
-                renderArticles(); // Re-render to show admin controls
+                updateAdminButtons('Logout');
+                renderArticles();
+                alert('Login successful!');
             } else {
                 alert('Invalid credentials');
             }
+        }
+    });
+
+    function showLoginModal() {
+        const modal = document.getElementById('admin-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+        }
+    }
+
+    function hideLoginModal() {
+        const modal = document.getElementById('admin-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+        clearLoginForm();
+    }
+
+    function clearLoginForm() {
+        const username = document.getElementById('username');
+        const password = document.getElementById('password');
+        if (username) username.value = '';
+        if (password) password.value = '';
+    }
+
+    function updateAdminButtons(text) {
+        document.querySelectorAll('#admin-login-btn').forEach(btn => {
+            btn.textContent = text;
         });
     }
 
-    // Logout function
     function logout() {
         isAdmin = false;
         removeAdminInterface();
-        // Update all admin buttons
-        document.querySelectorAll('#admin-login-btn').forEach(btn => {
-            btn.textContent = 'Admin';
-        });
-        clearLoginForm();
-        renderArticles(); // Re-render to hide admin controls
+        updateAdminButtons('Admin');
+        renderArticles();
     }
 
-    // Clear login form
-    function clearLoginForm() {
-        if (document.getElementById('username')) document.getElementById('username').value = '';
-        if (document.getElementById('password')) document.getElementById('password').value = '';
-    }
-
-    // Create admin interface dynamically
     function createAdminInterface() {
-        if (adminPanel) return; // Already created
+        if (adminPanel) return;
         
         const container = document.querySelector('.news-content .container');
+        if (!container) return;
         
         // Create admin panel
         adminPanel = document.createElement('div');
-        adminPanel.id = 'admin-panel';
         adminPanel.className = 'admin-panel';
         adminPanel.innerHTML = `
             <div class="admin-header">
                 <h3>Admin Panel</h3>
-                <button id="logout-btn" class="logout-btn">Logout</button>
+                <button onclick="logout()" class="logout-btn">Logout</button>
             </div>
-            <button id="add-news-btn" class="admin-btn">Add News Article</button>
+            <button onclick="showNewsForm()" class="admin-btn">Add News Article</button>
         `;
         
         // Create news form
         newsForm = document.createElement('div');
-        newsForm.id = 'news-form';
         newsForm.className = 'news-form hidden';
         newsForm.innerHTML = `
             <h3>Add New Article</h3>
-            <form id="article-form">
+            <form onsubmit="submitArticle(event)">
                 <input type="text" id="article-title" placeholder="Article Title" required>
                 <input type="date" id="article-date" required>
-                <textarea id="article-preview" placeholder="Article preview (shown on news page)..." rows="3" required></textarea>
+                <textarea id="article-preview" placeholder="Article preview..." rows="3" required></textarea>
                 <input type="url" id="article-url" placeholder="Full article URL (optional)">
                 
                 <div class="formatting-options">
@@ -144,7 +123,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         <option value="Inter">Inter</option>
                         <option value="Arial">Arial</option>
                         <option value="Georgia">Georgia</option>
-                        <option value="Times New Roman">Times New Roman</option>
                     </select>
                     
                     <label>Font Size:</label>
@@ -157,91 +135,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 <div class="form-buttons">
                     <button type="submit">Publish Article</button>
-                    <button type="button" id="cancel-btn">Cancel</button>
+                    <button type="button" onclick="hideNewsForm()">Cancel</button>
                 </div>
             </form>
         `;
         
-        // Insert before news articles
+        const newsArticles = document.getElementById('news-articles');
         container.insertBefore(adminPanel, newsArticles);
         container.insertBefore(newsForm, newsArticles);
         
-        // Get references to new elements
-        addNewsBtn = document.getElementById('add-news-btn');
-        articleForm = document.getElementById('article-form');
-        cancelBtn = document.getElementById('cancel-btn');
-        logoutBtn = document.getElementById('logout-btn');
-        
-        // Add event listeners
-        logoutBtn.addEventListener('click', logout);
-        
-        addNewsBtn.addEventListener('click', function() {
-            if (!isAdmin) return;
-            newsForm.classList.remove('hidden');
-            addNewsBtn.style.display = 'none';
-        });
-        
-        cancelBtn.addEventListener('click', function() {
-            newsForm.classList.add('hidden');
-            addNewsBtn.style.display = 'inline-block';
-            articleForm.reset();
-        });
-        
-        articleForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            if (!isAdmin) return;
-
-            const title = document.getElementById('article-title').value;
-            const date = document.getElementById('article-date').value;
-            const preview = document.getElementById('article-preview').value;
-            const url = document.getElementById('article-url').value;
-            const fontFamily = document.getElementById('font-family').value;
-            const fontSize = document.getElementById('font-size').value;
-
-            // Format date
-            const formattedDate = new Date(date).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-
-            // Create article
-            const article = {
-                id: Date.now(),
-                title,
-                date: formattedDate,
-                preview,
-                url,
-                fontFamily,
-                fontSize
-            };
-
-            // Add to articles array
-            articles.unshift(article);
-            
-            // Save to localStorage
-            localStorage.setItem('buildone_articles', JSON.stringify(articles));
-
-            // Render articles
-            renderArticles();
-
-            // Reset and hide form
-            articleForm.reset();
-            newsForm.classList.add('hidden');
-            addNewsBtn.style.display = 'inline-block';
-
-            alert('Article published successfully!');
-        });
-        
-        // Set today's date as default
-        const articleDateInput = document.getElementById('article-date');
-        if (articleDateInput) {
-            articleDateInput.valueAsDate = new Date();
+        // Set today's date
+        const dateInput = document.getElementById('article-date');
+        if (dateInput) {
+            dateInput.valueAsDate = new Date();
         }
     }
-    
-    // Remove admin interface
+
     function removeAdminInterface() {
         if (adminPanel) {
             adminPanel.remove();
@@ -251,13 +160,70 @@ document.addEventListener('DOMContentLoaded', function() {
             newsForm.remove();
             newsForm = null;
         }
-        addNewsBtn = null;
-        articleForm = null;
-        cancelBtn = null;
-        logoutBtn = null;
     }
 
-    // Load articles from localStorage
+    // Global functions for admin interface
+    window.logout = logout;
+    
+    window.showNewsForm = function() {
+        if (newsForm) {
+            newsForm.classList.remove('hidden');
+        }
+    };
+    
+    window.hideNewsForm = function() {
+        if (newsForm) {
+            newsForm.classList.add('hidden');
+            document.getElementById('article-title').value = '';
+            document.getElementById('article-preview').value = '';
+            document.getElementById('article-url').value = '';
+        }
+    };
+    
+    window.submitArticle = function(e) {
+        e.preventDefault();
+        if (!isAdmin) return;
+
+        const title = document.getElementById('article-title').value;
+        const date = document.getElementById('article-date').value;
+        const preview = document.getElementById('article-preview').value;
+        const url = document.getElementById('article-url').value;
+        const fontFamily = document.getElementById('font-family').value;
+        const fontSize = document.getElementById('font-size').value;
+
+        const formattedDate = new Date(date).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        const article = {
+            id: Date.now(),
+            title,
+            date: formattedDate,
+            preview,
+            url,
+            fontFamily,
+            fontSize
+        };
+
+        articles.unshift(article);
+        localStorage.setItem('buildone_articles', JSON.stringify(articles));
+        renderArticles();
+        hideNewsForm();
+        alert('Article published successfully!');
+    };
+
+    window.deleteArticle = function(id) {
+        if (!isAdmin) return;
+        
+        if (confirm('Are you sure you want to delete this article?')) {
+            articles = articles.filter(article => article.id !== id);
+            localStorage.setItem('buildone_articles', JSON.stringify(articles));
+            renderArticles();
+        }
+    };
+
     function loadArticles() {
         const saved = localStorage.getItem('buildone_articles');
         if (saved) {
@@ -265,8 +231,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Render articles
     function renderArticles() {
+        const newsArticles = document.getElementById('news-articles');
         if (!newsArticles) return;
         
         newsArticles.innerHTML = '';
@@ -282,11 +248,9 @@ document.addEventListener('DOMContentLoaded', function() {
             articleElement.style.fontFamily = article.fontFamily || 'Inter';
             articleElement.style.fontSize = article.fontSize || '1rem';
             
-            // Make article clickable if it has a URL
             if (article.url) {
                 articleElement.style.cursor = 'pointer';
                 articleElement.addEventListener('click', function(e) {
-                    // Don't trigger if clicking on delete button
                     if (e.target.classList.contains('delete-btn')) return;
                     window.open(article.url, '_blank');
                 });
@@ -302,17 +266,4 @@ document.addEventListener('DOMContentLoaded', function() {
             newsArticles.appendChild(articleElement);
         });
     }
-
-    // Delete article function (global scope)
-    window.deleteArticle = function(id) {
-        if (!isAdmin) return;
-        
-        if (confirm('Are you sure you want to delete this article?')) {
-            articles = articles.filter(article => article.id !== id);
-            localStorage.setItem('buildone_articles', JSON.stringify(articles));
-            renderArticles();
-        }
-    };
-
-
 });
