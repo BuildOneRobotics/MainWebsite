@@ -145,10 +145,12 @@ document.addEventListener('DOMContentLoaded', function() {
         container.insertBefore(newsForm, newsArticles);
         
         // Set today's date
-        const dateInput = document.getElementById('article-date');
-        if (dateInput) {
-            dateInput.valueAsDate = new Date();
-        }
+        setTimeout(() => {
+            const dateInput = document.getElementById('article-date');
+            if (dateInput) {
+                dateInput.valueAsDate = new Date();
+            }
+        }, 100);
     }
 
     function removeAdminInterface() {
@@ -168,15 +170,21 @@ document.addEventListener('DOMContentLoaded', function() {
     window.showNewsForm = function() {
         if (newsForm) {
             newsForm.classList.remove('hidden');
+            // Hide the add button
+            const addBtn = adminPanel.querySelector('.admin-btn');
+            if (addBtn) addBtn.style.display = 'none';
         }
     };
     
     window.hideNewsForm = function() {
         if (newsForm) {
             newsForm.classList.add('hidden');
-            document.getElementById('article-title').value = '';
-            document.getElementById('article-preview').value = '';
-            document.getElementById('article-url').value = '';
+            // Show the add button again
+            const addBtn = adminPanel.querySelector('.admin-btn');
+            if (addBtn) addBtn.style.display = 'inline-block';
+            // Clear form
+            const form = newsForm.querySelector('form');
+            if (form) form.reset();
         }
     };
     
@@ -202,13 +210,14 @@ document.addEventListener('DOMContentLoaded', function() {
             title,
             date: formattedDate,
             preview,
-            url,
+            url: url || null,
             fontFamily,
             fontSize
         };
 
         articles.unshift(article);
         localStorage.setItem('buildone_articles', JSON.stringify(articles));
+        console.log('Article created:', article);
         renderArticles();
         hideNewsForm();
         alert('Article published successfully!');
